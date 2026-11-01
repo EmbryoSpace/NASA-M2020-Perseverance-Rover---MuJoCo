@@ -388,6 +388,18 @@ Default is 2k (5.1 MB PNG). Three things that bite here:
 
 ---
 
+## ACE and ENav
+
+The two algorithms Perseverance navigates with, implemented from the
+published papers. The write-up lives with the code, in
+[`ace/README.md`](../ace/README.md): how ACE turns terrain uncertainty into
+guaranteed bounds, how ENav spends it, the full published-vs-implemented
+comparison, what is estimated, where this deviates, and the validation
+against settled physics.
+
+The sections below cover the earlier A* route planner, which is a separate
+thing and still in the repo.
+
 ## Autonomous navigation (the AI-planned-drive loop)
 
 In December 2025 Perseverance drove 689 ft and 807 ft on routes planned by AI
@@ -406,7 +418,7 @@ real HiRISE DTM  ->  hazard map  ->  A* waypoint route
 python scripts/autonav.py --model course_jezero_boulder.xml --goal 18 6 --span 40  # the boulder demo
 python scripts/autonav.py --goal 25 10             # plan, validate, drive (headless)
 mjpython scripts/autonav.py --goal 25 10 --viewer  # watch it live
-python scripts/autonav.py --goal 25 10 --record    # render to autonav_drive.mp4 (see images/autonav_drive.gif)
+python scripts/autonav.py --goal 25 10 --record    # render the drive to autonav_drive.mp4
 python scripts/autonav.py --goal 25 10 --plan-only
 python scripts/autonav.py --survey                 # hazard map -> hazard_map.npz
 python scripts/plot_drive.py                       # figure of the result

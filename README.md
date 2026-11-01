@@ -4,6 +4,7 @@
 
 **A physics simulation of NASA's Perseverance rover, built from JPL's flight geometry and driving itself across real Jezero Crater terrain.**
 
+[![validate](https://github.com/AdityaRampal26/NASA-M2020-Perseverance-Rover---MuJoCo/actions/workflows/validate.yml/badge.svg)](https://github.com/AdityaRampal26/NASA-M2020-Perseverance-Rover---MuJoCo/actions/workflows/validate.yml)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![MuJoCo](https://img.shields.io/badge/MuJoCo-3.x-0B7285)
 ![License](https://img.shields.io/badge/code-MIT-green)
@@ -136,6 +137,7 @@ Each motor can push harder than the ground can grip, so **a wheel slips before i
 | Folder | What's inside |
 |---|---|
 | [`models/`](models/) | The rover and terrain models (MuJoCo XML), JPL's part meshes and the terrain maps |
+| [`ace/`](ace/) | ACE and the ENav planner — pure kinematics, numpy only, no simulator. **Has its own write-up** |
 | [`scripts/`](scripts/) | Drive it yourself, the autonomy, terrain tools, and the scripts that make the visuals |
 | [`images/`](images/) | Renders and animations used on this page |
 | [`docs/`](docs/TECHNICAL_NOTES.md) | Technical notes: where every number comes from, what's estimated, and lessons learned |
@@ -149,8 +151,14 @@ bash setup.sh && source .venv/bin/activate   # also downloads JPL's rover meshes
 mjpython scripts/teleop.py                    # drive it with the keyboard (Linux: python)
 python scripts/demo.py validate               # check the model against NASA's numbers
 python scripts/autonav.py --model course_jezero_boulder.xml --goal 18 6 --span 40   # the boulder drive
+python scripts/run_enav.py --goal 18 6 --cycles 30              # ENav: flight-style planner
+python scripts/validate_ace.py --poses 40 --eps 0.015           # ACE vs settled physics
 python scripts/make_gifs.py                   # redraw the animations on this page
+python -m pip install -r requirements-dev.txt && python -m pytest tests   # steering, planner and camera tests
 ```
+
+To use the rover modules from your own code, `pip install -e .` in the clone, then `import m2020_drive` or `from autonav import Costmap` from anywhere.
+On Windows, run `powershell -ExecutionPolicy Bypass -File setup.ps1`, then `.venv\Scripts\Activate.ps1`, and use `python` for every script, including `teleop.py`.
 
 <details>
 <summary><b>Glossary</b> (for anyone new to rovers)</summary>
@@ -173,7 +181,7 @@ python scripts/make_gifs.py                   # redraw the animations on this pa
 If you use this model in your work, please cite it:
 
 ```bibtex
-@software(rampal2026perseverancemujoco,
+@software{rampal2026perseverancemujoco,
   author = {Rampal, Aditya},
   title = {{Perseverance MuJoCo: a MuJoCo digital twin of NASA's Mars 2020 Perseverance rover, built from the NASA/JPL URDF}},
   url = {https://github.com/AdityaRampal26/NASA-M2020-Perseverance-Rover---MuJoCo},
