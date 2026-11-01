@@ -41,6 +41,7 @@ from ace import (ace, RoverGeometry, DEFAULT_LIMITS, PERCEPTION_EPS,
                  wheel_box_halfsize, EnavMaps, GlobalPlanner, select_path,
                  first_leg, fixed_tree)
 from ace_eval import AceGroundTruth
+from rover_art import draw_rover, move_rover
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES = os.path.join(ROOT, "images")
@@ -50,12 +51,12 @@ SUBFRAMES = 3
 THEMES = {
     "light": dict(bg="#FFFFFF", panel="#F6F8FA", text="#1F2328", sub="#57606A",
                   fan="#8C959F", ok="#8C959F", bad="#CF222E", pick="#0969DA",
-                  trail="#2DA44E", body="#57606A", wheel="#1F2328",
+                  trail="#2DA44E", body="#AEB7C2", wheel="#4B535C", edge="#1F2328", belly="#0969DA",
                   goal="#8250DF", limit="#CF222E", band="#0969DA",
                   terrain="Greys", grid="#D0D7DE"),
     "dark": dict(bg="#0D1117", panel="#161B22", text="#E6EDF3", sub="#8B949E",
                  fan="#6E7681", ok="#6E7681", bad="#F85149", pick="#58A6FF",
-                 trail="#3FB950", body="#8B949E", wheel="#E6EDF3",
+                 trail="#3FB950", body="#6E7681", wheel="#C9D1D9", edge="#E6EDF3", belly="#58A6FF",
                  goal="#A371F7", limit="#F85149", band="#58A6FF",
                  terrain="Greys_r", grid="#30363D"),
 }
@@ -155,14 +156,6 @@ def terrain_grid(gt, centre, span, n=200):
     return Z
 
 
-def rover_patch(pose, scale=1.0):
-    c, s = math.cos(pose[2]), math.sin(pose[2])
-    R = np.array([[c, -s], [s, c]])
-    pts = np.array([[-1.0, -0.7], [1.0, -0.7], [1.3, 0.0],
-                    [1.0, 0.7], [-1.0, 0.7]]) * scale
-    return pts @ R.T + [pose[0], pose[1]]
-
-
 def make_gif(frames, gt, start, goal, span, theme, out):
     import matplotlib
     matplotlib.use("Agg")
@@ -219,9 +212,7 @@ def make_gif(frames, gt, start, goal, span, theme, out):
     pick, = axm.plot([], [], color=T["pick"], lw=2.5, zorder=6)
     trail, = axm.plot([], [], color=T["trail"], lw=3.0, zorder=5,
                       solid_capstyle="round")
-    body = Polygon(rover_patch((0, 0, 0)), closed=True, fc=T["body"],
-                   ec=T["wheel"], lw=1.1, zorder=8)
-    axm.add_patch(body)
+    rover = draw_rover(axm, (start[0], start[1], 0.0), T, zorder=8)
     axm.set_title("", color=T["text"], fontsize=12, loc="left",
                   weight="bold", pad=8)
 
@@ -268,7 +259,7 @@ def make_gif(frames, gt, start, goal, span, theme, out):
         pick.set_data(f["chosen"][:, 0], f["chosen"][:, 1])
         tr = np.array([q[:2] for q in f["trail"]] + [now[:2]])
         trail.set_data(tr[:, 0], tr[:, 1])
-        body.set_xy(rover_patch(now))
+        move_rover(rover, now)
         axm.set_title(f"ENav cycle {f['cycle']}   {f['dist']:.1f} m to goal",
                       color=T["text"], fontsize=12, loc="left", weight="bold")
 

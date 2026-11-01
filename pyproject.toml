@@ -52,7 +52,6 @@ py-modules = [
     "make_course",
     "make_enav_3d",
     "make_enav_explainer",
-    "make_enav_gif",
     "make_gifs",
     "plot_drive",
     "run_enav",

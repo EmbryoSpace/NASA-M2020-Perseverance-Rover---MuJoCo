@@ -9,11 +9,9 @@
 ![MuJoCo](https://img.shields.io/badge/MuJoCo-3.x-0B7285)
 ![License](https://img.shields.io/badge/code-MIT-green)
 
-<img src="images/enav_drive_3d.gif" width="720" alt="Perseverance driving a route it planned itself with ENav and ACE across Jezero Crater terrain"/>
+<img src="images/autonav_drive.gif" width="720" alt="Perseverance autonomously driving around a boulder on the Jezero terrain"/>
 
-*Driving a route it planned for itself with ENav and ACE — the algorithms the
-real rover navigates with — across terrain built from the Jezero Crater HiRISE map.
-Orange is the planned route, green is where it actually went.*
+*The rover planning and driving its own route around a boulder, in MuJoCo.*
 
 </div>
 
@@ -121,45 +119,6 @@ Each motor can push harder than the ground can grip, so **a wheel slips before i
 | Max tilt | 5.04° while driving, exactly what the pre-drive check predicted |
 
 <p align="center"><img src="images/autonav_result.png" width="900" alt="Terrain with planned and driven route, and the hazard map the planner searched"/></p>
-
-## Flight-style autonomy: ACE and ENav
-
-The route planner above is my own. Perseverance uses something rather
-different, described in two JPL papers, and this repo implements both — from
-the published papers alone, with no JPL source.
-
-**ACE** predicts what the suspension will do on a patch of ground *without
-simulating it*, returning a guaranteed range for belly clearance, tilt and
-the suspension angles. **ENav** is the planner that uses it: 1,694 candidate
-paths to a 6 m horizon each cycle, ranked by time to the goal, with ACE run
-down the ranking until one is safe — then it drives a single metre and starts
-again.
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="images/anim_enav_explainer_dark.gif">
-    <img src="images/anim_enav_explainer_light.gif" width="900" alt="The ENav loop: the plan on the left, and what ACE predicted for belly clearance and tilt along the chosen path on the right">
-  </picture>
-</p>
-
-*Left: the plan — the ring is where all 1,694 options end, grey passed ACE,
-red was rejected, blue won, green is where the rover has been. Right: what
-ACE promised before setting off, against the limits that decide whether the
-path is allowed at all.*
-
-ACE's claim is conservatism: the settled truth must land inside the range it
-predicts. The papers check that against ROAMS, JPL's internal simulator. Here
-it is checked against the full rocker-bogie physics on real Jezero terrain,
-which anyone can re-run — **78 poses, contained every time, with a median
-clearance band 0.153 m wide.**
-
-```bash
-python scripts/run_enav.py --goal 18 6 --cycles 30       # drive a goal
-python scripts/validate_ace.py --poses 40 --eps 0.015    # check the bounds
-```
-
-**→ [`ace/`](ace/) has the full write-up**: how it works, what matches the
-papers, what is estimated, and the two places this deliberately deviates.
 
 ## Does it match the real rover?
 
