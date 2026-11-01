@@ -4,13 +4,16 @@
 
 **A physics simulation of NASA's Perseverance rover, built from JPL's flight geometry and driving itself across real Jezero Crater terrain.**
 
+[![validate](https://github.com/AdityaRampal26/NASA-M2020-Perseverance-Rover---MuJoCo/actions/workflows/validate.yml/badge.svg)](https://github.com/AdityaRampal26/NASA-M2020-Perseverance-Rover---MuJoCo/actions/workflows/validate.yml)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![MuJoCo](https://img.shields.io/badge/MuJoCo-3.x-0B7285)
 ![License](https://img.shields.io/badge/code-MIT-green)
 
-<img src="images/autonav_drive.gif" width="720" alt="Perseverance autonomously driving around a boulder on the Jezero terrain"/>
+<img src="images/enav_drive_3d.gif" width="720" alt="Perseverance driving a route it planned itself with ENav and ACE across Jezero Crater terrain"/>
 
-*The rover planning and driving its own route around a boulder, in MuJoCo.*
+*Driving a route it planned for itself with ENav and ACE — the algorithms the
+real rover navigates with — across terrain built from the Jezero Crater HiRISE map.
+Orange is the planned route, green is where it actually went.*
 
 </div>
 

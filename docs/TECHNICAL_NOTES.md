@@ -544,7 +544,7 @@ real HiRISE DTM  ->  hazard map  ->  A* waypoint route
 python scripts/autonav.py --model course_jezero_boulder.xml --goal 18 6 --span 40  # the boulder demo
 python scripts/autonav.py --goal 25 10             # plan, validate, drive (headless)
 mjpython scripts/autonav.py --goal 25 10 --viewer  # watch it live
-python scripts/autonav.py --goal 25 10 --record    # render to autonav_drive.mp4 (see images/autonav_drive.gif)
+python scripts/autonav.py --goal 25 10 --record    # render the drive to autonav_drive.mp4
 python scripts/autonav.py --goal 25 10 --plan-only
 python scripts/autonav.py --survey                 # hazard map -> hazard_map.npz
 python scripts/plot_drive.py                       # figure of the result
