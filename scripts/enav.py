@@ -551,7 +551,7 @@ class Selection:
 
 
 def _rank_and_ace(P, start, maps, gp, wheel_boxes_fn, g, M, limits,
-                  belly_fn, verbose, label):
+                  belly_fn, verbose, label, record=None):
     """Algorithm 1 over one candidate set: rank by the cheap path cost, then
     spend ACE down the ranking until something is feasible AND at least M ACE
     runs have gone by."""
@@ -568,6 +568,8 @@ def _rank_and_ace(P, start, maps, gp, wheel_boxes_fn, g, M, limits,
         ac, n = run_ace(p, start, wheel_boxes_fn, g, maps=maps,
                         limits=limits, belly_fn=belly_fn)
         n_ace += n
+        if record is not None:          # for plotting what ACE saw
+            record(p, ci, ac)
         if ci + ac < c_min:
             c_min, best = ci + ac, p
         if math.isfinite(c_min) and n_ace >= M:
@@ -583,6 +585,7 @@ def select_path(start, maps: EnavMaps, gp: GlobalPlanner,
                 M: int = M_ACE_RUNS,
                 limits: dict = None,
                 belly_fn=None,
+                record=None,
                 verbose: bool = False) -> Selection:
     """ENav path selection, Algorithm 1.
 
@@ -603,7 +606,7 @@ def select_path(start, maps: EnavMaps, gp: GlobalPlanner,
     """
     sel = _rank_and_ace(fixed_tree() + heritage_tree(prev_path),
                         start, maps, gp, wheel_boxes_fn, g, M, limits,
-                        belly_fn, verbose, "fixed+heritage")
+                        belly_fn, verbose, "fixed+heritage", record)
     if sel.path is not None:
         return sel
 
@@ -611,7 +614,7 @@ def select_path(start, maps: EnavMaps, gp: GlobalPlanner,
     if not R:
         return sel
     rsel = _rank_and_ace(R, start, maps, gp, wheel_boxes_fn, g, 1, limits,
-                         belly_fn, verbose, "retreat")
+                         belly_fn, verbose, "retreat", record)
     if rsel.path is None:
         return sel
     return Selection(rsel.path, rsel.cost, sel.n_ace + rsel.n_ace,

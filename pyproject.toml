@@ -52,6 +52,7 @@ py-modules = [
     "fetch_jezero",
     "m2020_drive",
     "make_course",
+    "make_enav_gif",
     "make_gifs",
     "plot_drive",
     "run_enav",

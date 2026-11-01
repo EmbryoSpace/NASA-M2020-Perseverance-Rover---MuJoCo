@@ -139,6 +139,17 @@ first metre of the winner, and replans.
 
 Both were written from the published papers alone. No JPL source was used.
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/anim_enav_dark.gif">
+    <img src="images/anim_enav_light.gif" width="840" alt="Top-down view of ENav driving to a goal: the ring of path endpoints, the candidates ACE checked, the chosen arc, and the driven trail">
+  </picture>
+</p>
+
+*Every cycle: 1,694 options reach 6 m out (the ring of dots), the cheapest few
+get ACE'd, the winner is driven for one metre, and the whole thing starts
+again. 19 cycles to cross 19 m of Jezero.*
+
 ### Does ACE actually bound the truth?
 
 The papers validate ACE against ROAMS, JPL's internal simulator, which nobody
