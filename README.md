@@ -128,51 +128,38 @@ The route planner above is my own. Perseverance uses something rather
 different, described in two JPL papers, and this repo implements both — from
 the published papers alone, with no JPL source.
 
-**ACE** (Approximate Clearance Evaluation) answers *"if I put six wheels on
-that patch of ground, what happens to my body?"* without simulating it. It
-pushes the terrain's height uncertainty through the suspension geometry and
-returns a **guaranteed range** for tilt, belly clearance, wheel drop and the
-suspension angles. It is allowed to be pessimistic; it is not allowed to be
-wrong, because a range that is too optimistic drives the rover into a rock.
-
-**ENav** is the navigator that uses it. Each cycle it fans 1,694 candidate
-paths out to a 6 m horizon, ranks them by time to the goal, runs ACE down the
-ranking until one is safe, drives the first metre of the winner, and replans.
+**ACE** predicts what the suspension will do on a patch of ground *without
+simulating it*, returning a guaranteed range for belly clearance, tilt and
+the suspension angles. **ENav** is the planner that uses it: 1,694 candidate
+paths to a 6 m horizon each cycle, ranked by time to the goal, with ACE run
+down the ranking until one is safe — then it drives a single metre and starts
+again.
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="images/anim_enav_dark.gif">
-    <img src="images/anim_enav_light.gif" width="840" alt="Top-down view of ENav driving to a goal: the ring of path endpoints, the candidates ACE checked, the chosen arc, and the driven trail">
+    <source media="(prefers-color-scheme: dark)" srcset="images/anim_enav_explainer_dark.gif">
+    <img src="images/anim_enav_explainer_light.gif" width="900" alt="The ENav loop: the plan on the left, and what ACE predicted for belly clearance and tilt along the chosen path on the right">
   </picture>
 </p>
 
-*Every cycle: 1,694 options reach 6 m out (the ring of dots), the cheapest few
-get ACE'd, the winner is driven for one metre, and it all starts again. 19
-cycles to cross 19 m of Jezero.*
+*Left: the plan — the ring is where all 1,694 options end, grey passed ACE,
+red was rejected, blue won, green is where the rover has been. Right: what
+ACE promised before setting off, against the limits that decide whether the
+path is allowed at all.*
 
-**Does ACE actually bound the truth?** The papers validate it against ROAMS,
-JPL's internal simulator, which nobody outside JPL can run. This repo
-validates it against the full rocker-bogie physics in MuJoCo on real Jezero
-terrain — which anyone can re-run.
-
-| Across 78 random poses on the Jezero DTM | |
-|---|---|
-| Settled truth inside ACE's predicted range | 78 / 78 |
-| Clearance range width (median) | 0.153 m |
-| Worst case: ACE's floor below the true clearance | 5.0 cm |
-
-Conservative on every pose, and tight enough to be useful — a bound that is
-always true but infinitely wide rejects every path the rover could take.
+ACE's claim is conservatism: the settled truth must land inside the range it
+predicts. The papers check that against ROAMS, JPL's internal simulator. Here
+it is checked against the full rocker-bogie physics on real Jezero terrain,
+which anyone can re-run — **78 poses, contained every time, with a median
+clearance band 0.153 m wide.**
 
 ```bash
 python scripts/run_enav.py --goal 18 6 --cycles 30       # drive a goal
 python scripts/validate_ace.py --poses 40 --eps 0.015    # check the bounds
 ```
 
-The library lives in [`ace/`](ace/) and imports nothing but numpy — no
-simulator, which is rather the point. The full published-vs-implemented
-comparison, what is estimated, and where this deviates are in the
-[technical notes](docs/TECHNICAL_NOTES.md#ace-and-enav).
+**→ [`ace/`](ace/) has the full write-up**: how it works, what matches the
+papers, what is estimated, and the two places this deliberately deviates.
 
 ## Does it match the real rover?
 
@@ -191,7 +178,7 @@ comparison, what is estimated, and where this deviates are in the
 | Folder | What's inside |
 |---|---|
 | [`models/`](models/) | The rover and terrain models (MuJoCo XML), JPL's part meshes and the terrain maps |
-| [`ace/`](ace/) | ACE and the ENav planner — pure kinematics, numpy only, no simulator |
+| [`ace/`](ace/) | ACE and the ENav planner — pure kinematics, numpy only, no simulator. **Has its own write-up** |
 | [`scripts/`](scripts/) | Drive it yourself, the autonomy, terrain tools, and the scripts that make the visuals |
 | [`images/`](images/) | Renders and animations used on this page |
 | [`docs/`](docs/TECHNICAL_NOTES.md) | Technical notes: where every number comes from, what's estimated, and lessons learned |
