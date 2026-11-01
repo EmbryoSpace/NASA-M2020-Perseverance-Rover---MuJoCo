@@ -150,9 +150,11 @@ mjpython scripts/teleop.py                    # drive it with the keyboard (Linu
 python scripts/demo.py validate               # check the model against NASA's numbers
 python scripts/autonav.py --model course_jezero_boulder.xml --goal 18 6 --span 40   # the boulder drive
 python scripts/make_gifs.py                   # redraw the animations on this page
+python -m pip install -r requirements-dev.txt && python -m pytest tests   # steering, planner and camera tests
 ```
 
 To use the rover modules from your own code, `pip install -e .` in the clone, then `import m2020_drive` or `from autonav import Costmap` from anywhere.
+On Windows, run `powershell -ExecutionPolicy Bypass -File setup.ps1`, then `.venv\Scripts\Activate.ps1`, and use `python` for every script, including `teleop.py`.
 
 <details>
 <summary><b>Glossary</b> (for anyone new to rovers)</summary>
