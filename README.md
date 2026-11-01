@@ -153,6 +153,7 @@ python scripts/make_gifs.py                   # redraw the animations on this pa
 python -m pip install -r requirements-dev.txt && python -m pytest tests   # steering, planner and camera tests
 ```
 
+To use the rover modules from your own code, `pip install -e .` in the clone, then `import m2020_drive` or `from autonav import Costmap` from anywhere.
 On Windows, run `powershell -ExecutionPolicy Bypass -File setup.ps1`, then `.venv\Scripts\Activate.ps1`, and use `python` for every script, including `teleop.py`.
 
 <details>
