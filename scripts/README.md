@@ -42,6 +42,7 @@ These implement what Perseverance actually runs, from the published JPL papers.
 | Script | What it does |
 |---|---|
 | `plot_drive.py` | The route plot on the main page (hazard map, planned vs. driven route) |
+| `make_enav_3d.py` | Records ENav driving in 3D with the real physics, planned route and driven track overlaid. `--gif` for the README, `--dry-run` to drive without rendering. Needs OpenGL |
 | `make_enav_gif.py` | The top-down ENav animation on this page: the path tree, what ACE rejected, the chosen arc and the driven route. Needs no GPU |
 | `make_gifs.py` | The top-down route animation, the rocker-bogie animations (2D and MuJoCo) and the steering diagram |
 
