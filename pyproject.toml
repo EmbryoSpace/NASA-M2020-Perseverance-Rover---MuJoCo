@@ -51,6 +51,7 @@ py-modules = [
     "m2020_drive",
     "make_course",
     "make_enav_3d",
+    "make_enav_explainer",
     "make_enav_gif",
     "make_gifs",
     "plot_drive",
