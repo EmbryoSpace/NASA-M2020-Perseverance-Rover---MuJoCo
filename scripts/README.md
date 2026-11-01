@@ -41,7 +41,7 @@ only, no simulator. These are the tools that run and check them.
 | Script | What it does |
 |---|---|
 | `plot_drive.py` | The route plot on the main page (hazard map, planned vs. driven route) |
-| `make_enav_3d.py` | Records ENav driving in 3D with the real physics, planned route and driven track overlaid. `--gif` for the README, `--dry-run` to drive without rendering. Needs OpenGL. The README hero was made with `--gif --cycles 22` |
+| `make_enav_3d.py` | The whole ENav + ACE loop in MuJoCo with the real rover: the reachable set, the paths ACE checked, which it rejected, the chosen one and the driven track, all drawn on the terrain. `--viewer` to watch it live (macOS: `mjpython`), `--gif` to record, `--dry-run` to drive without rendering |
 | `make_enav_explainer.py` | The whole loop step by step: the plan beside what ACE predicted for belly clearance and tilt along the chosen path, against the published limits |
 | `make_gifs.py` | The top-down route animation, the rocker-bogie animations (2D and MuJoCo) and the steering diagram |
 

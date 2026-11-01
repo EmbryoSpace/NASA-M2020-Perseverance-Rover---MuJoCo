@@ -17,6 +17,7 @@ the overlay is rebuilt for the next cycle, and it all happens again.
 
     python scripts/make_enav_3d.py --gif          # for the README
     python scripts/make_enav_3d.py                # mp4, 1280x720
+    mjpython scripts/make_enav_3d.py --viewer     # watch it live (macOS)
     python scripts/make_enav_3d.py --dry-run      # drive it, render nothing
 
 Rendering needs a working OpenGL context. On macOS that is plain `python`
@@ -117,13 +118,18 @@ def plan(model, start, goal, cycles, M, span, fan_every=6):
 
 
 # ---------------------------------------------------------------- overlay
-def draw_cycle(scn, gt, cyc, track, goal, lift=0.30):
+def draw_cycle(scn, gt, cyc, track, goal, lift=0.30, reset=False):
     """Draw one cycle's ENav decision into an already-filled Renderer scene.
 
-    The scene arrives with the model's own geoms in it, so this appends and
-    never resets ngeom -- zeroing it here deletes the rover and renders an
-    empty landscape with a plan drawn across it.
+    reset=False for a Renderer's scene, which update_scene has ALREADY
+    filled with the model's geoms -- zeroing ngeom there deletes the rover
+    and renders an empty landscape with a plan drawn across it.
+    reset=True for the viewer's user_scn, which is a dedicated overlay scene
+    and has to be cleared each time or the geoms pile up.
     """
+    if reset:
+        scn.ngeom = 0
+
     def put(fn):
         if scn.ngeom >= scn.maxgeom:
             return False
@@ -176,7 +182,7 @@ def draw_cycle(scn, gt, cyc, track, goal, lift=0.30):
 
 # ---------------------------------------------------------------- driving
 def execute(gt, cycles, start, on_frame=None, speed=0.042, turn_rate=0.08,
-            realtime=60.0, fps=30, max_minutes=240.0):
+            realtime=60.0, fps=30, max_minutes=240.0, alive_fn=None):
     """Drive each cycle's first metre with the real physics, closing the loop
     on the measured pose. on_frame(d, track, cyc) runs once per rendered
     frame, with the cycle currently being executed."""
@@ -202,6 +208,8 @@ def execute(gt, cycles, start, on_frame=None, speed=0.042, turn_rate=0.08,
         def run(cmd_fn, done_fn, cyc=cyc):
             nonlocal n
             while not done_fn() and (d.time - t0) < max_minutes * 60:
+                if alive_fn is not None and not alive_fn():
+                    return
                 cmd_fn()
                 for _ in range(steps_per_frame):
                     mujoco.mj_step(m, d)
@@ -210,6 +218,8 @@ def execute(gt, cycles, start, on_frame=None, speed=0.042, turn_rate=0.08,
                     on_frame(d, track, cyc)
                 n += 1
 
+        if alive_fn is not None and not alive_fn():
+            break
         for pr in cyc["leg"]:
             if pr.is_tip:
                 if abs(pr.theta) < 1e-9:
@@ -228,6 +238,34 @@ def execute(gt, cycles, start, on_frame=None, speed=0.042, turn_rate=0.08,
         print(f"  drove cycle {i + 1}/{len(cycles)}  "
               f"({d.qpos[0]:6.2f},{d.qpos[1]:6.2f})  {n} frames", flush=True)
     return track, n
+
+
+# ---------------------------------------------------------------- viewer
+def drive_viewer(gt, cycles, start, goal, realtime=12.0, fps=50):
+    """Watch the loop live, with the plan drawn on the terrain. Orbit with the
+    mouse while it drives."""
+    import time
+    import mujoco.viewer
+    if sys.platform == "darwin" and getattr(mujoco.viewer, "_MJPYTHON", 0) is None:
+        print("On macOS the viewer must run under mjpython:\n"
+              f"    mjpython scripts/{os.path.basename(__file__)} "
+              f"{' '.join(sys.argv[1:])}\n")
+        return
+    m, d = gt.model, gt.data
+    dt = m.opt.timestep * max(1, int(realtime / (fps * m.opt.timestep)))
+
+    with mujoco.viewer.launch_passive(m, d) as v:
+        v.cam.distance, v.cam.elevation, v.cam.azimuth = 14.0, -24.0, 150.0
+
+        def on_frame(d, track, cyc):
+            v.cam.lookat[:] = d.qpos[:3] + np.array([0, 0, 0.6])
+            draw_cycle(v.user_scn, gt, cyc, track, goal, reset=True)
+            v.sync()
+            time.sleep(max(0.0, dt / realtime))
+
+        execute(gt, cycles, start, on_frame=on_frame, fps=fps,
+                realtime=realtime, alive_fn=v.is_running)
+    print("viewer closed")
 
 
 # ---------------------------------------------------------------- record
@@ -304,6 +342,9 @@ def main():
     ap.add_argument("--fps", type=int, default=15)
     ap.add_argument("--realtime", type=float, default=120.0,
                     help="simulated seconds per wall second")
+    ap.add_argument("--viewer", action="store_true",
+                    help="watch it live instead of recording "
+                         "(macOS: run under mjpython)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -311,6 +352,10 @@ def main():
                       args.M, args.span)
     if not cycles:
         raise SystemExit("ENav found nothing to drive")
+
+    if args.viewer:
+        drive_viewer(gt, cycles, args.start, tuple(args.goal))
+        return
 
     if args.dry_run:
         track, n = execute(gt, cycles, args.start, fps=args.fps,

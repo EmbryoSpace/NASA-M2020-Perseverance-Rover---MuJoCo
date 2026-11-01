@@ -156,6 +156,7 @@ python scripts/run_enav.py --goal 18 6 --cycles 30       # drive a goal
 python scripts/validate_ace.py --poses 40 --eps 0.015    # check the bounds
 python scripts/make_enav_explainer.py                    # the animation above
 python scripts/make_enav_3d.py --gif                     # the same, in MuJoCo
+mjpython scripts/make_enav_3d.py --viewer                # or watch it live
 ```
 
 ## Sources
