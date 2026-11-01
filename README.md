@@ -177,7 +177,7 @@ On Windows, run `powershell -ExecutionPolicy Bypass -File setup.ps1`, then `.ven
 If you use this model in your work, please cite it:
 
 ```bibtex
-@software(rampal2026perseverancemujoco,
+@software{rampal2026perseverancemujoco,
   author = {Rampal, Aditya},
   title = {{Perseverance MuJoCo: a MuJoCo digital twin of NASA's Mars 2020 Perseverance rover, built from the NASA/JPL URDF}},
   url = {https://github.com/AdityaRampal26/NASA-M2020-Perseverance-Rover---MuJoCo},
