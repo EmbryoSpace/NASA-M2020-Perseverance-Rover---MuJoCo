@@ -23,11 +23,13 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# the ace package lives at the repo root, one level up from scripts/
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ace import RoverGeometry
 from ace_eval import AceGroundTruth
-import enav
-from enav import EnavMaps, GlobalPlanner, select_path, first_leg, fixed_tree
+from ace import enav
+from ace import EnavMaps, GlobalPlanner, select_path, first_leg, fixed_tree
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES = os.path.join(ROOT, "images")

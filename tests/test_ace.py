@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 
 from ace import ace, RoverGeometry, WHEEL_KEYS, DEFAULT_LIMITS
-from enav import Primitive, Path, fixed_tree
+from ace import Primitive, Path, fixed_tree
 
 # wheel contact centres in the chassis frame, for building synthetic terrain
 WHEELS = {

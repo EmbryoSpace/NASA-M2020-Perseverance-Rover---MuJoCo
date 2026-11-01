@@ -388,6 +388,144 @@ Default is 2k (5.1 MB PNG). Three things that bite here:
 
 ---
 
+## ACE and ENav
+
+Implemented from the published papers alone. No JPL source was used.
+
+> Otsu et al., *Fast Approximate Clearance Evaluation for Rovers with
+> Articulated Suspension Systems*, Journal of Field Robotics 37:768–785, 2020.
+> doi:10.1002/rob.21892
+>
+> Toupet, Ono, Del Sesto, Maimone, McHenry, *Enhanced Autonomous Navigation on
+> the Perseverance Mars Rover*, IEEE Transactions on Field Robotics 3:83–124,
+> 2026. doi:10.1109/TFR.2025.3636366
+
+### Layout
+
+| | |
+|---|---|
+| `ace/core.py` | ACE itself: interval arithmetic, the suspension triangles, the state bounds |
+| `ace/enav.py` | The ENav planner: the path tree, the costs, Algorithm 1 |
+| `scripts/ace_eval.py` | The MuJoCo oracle the predictions are checked against |
+| `scripts/validate_ace.py` | The conservatism study |
+| `scripts/run_enav.py` | Drives a goal with ENav |
+| `scripts/make_enav_gif.py` | Top-down animation of the planner deciding |
+| `scripts/make_enav_3d.py` | The same drive rendered in 3D |
+
+`ace/` imports numpy and nothing else. ACE's whole purpose is to predict the
+settled pose of the suspension *without* settling it, so the package has no
+simulator dependency on purpose; the oracle that checks it lives separately,
+with the other MuJoCo tools.
+
+### What matches the papers
+
+| Quantity | Published | Here |
+|---|---|---|
+| Path options in the fixed tree | 14 × 11 × 11 = 1694 | 1694 |
+| Poses sampled along a straight 6 m path | 24 | 24 |
+| Poses on a 30° turn-in-place plus 6 m | 27 | 27 |
+| ACE clearance limit | 25 cm | 25 cm |
+| ACE tilt limit | 30° | 30° |
+| ACE wheel-drop limit | 35 cm | 35 cm |
+| Planning horizon | 6 m | 6 m |
+| Driven per cycle | 1 m | 1 m |
+| ACE evaluation interval along a path | 25 cm | 25 cm |
+| Max wheel ground speed | 4.2 cm/s | 4.2 cm/s |
+| Max turn-in-place rate | 1.5 °/s | 1.5 °/s |
+| Cost map resolution | 1 m | 1 m |
+| Plane-fit envelope radius | 2 m | 2 m |
+| Flat-ground belly clearance | 60 cm | 60 cm |
+
+Several of these are asserted in `tests/test_ace.py`, so they cannot drift
+quietly.
+
+### What is estimated
+
+The papers give the structure but not the constant for these. They are marked
+`EST` where they appear in the source.
+
+| | |
+|---|---|
+| ACE cost weights (`C_i`) | the barrier weighting per constraint |
+| Rocker and bogie angle limits | 25° each |
+| `M`, ACE runs spent per cycle | 120 by default |
+| Penalty weights and thresholds | `C_tau`, `C_r`, `tau_th`, `r_th` |
+| Steering timings | `t_steer`, all-at-once vs one-by-one |
+| Slip curve | the lookup used to grow the wheel boxes |
+| Goal arrival radius | 1 m |
+
+### Where this deviates
+
+**The goal is absorbing.** A candidate path that drives through the goal is
+not charged for the rest of its 6 m horizon, nor for turning onto an onward
+global path that no longer exists. The papers do not state this, and without
+it the rover orbits the goal at about 2.5 m instead of arriving: near the
+goal every 6 m candidate overshoots, so the end-of-path turn term decides a
+comparison between paths of otherwise identical length, and the planner is
+rewarded for overshooting and turning around.
+
+**The retreat path is a fallback, not a candidate.** Section II-E3 says it is
+selected only when nothing in the fixed or heritage trees is feasible, and
+this enforces that rather than ranking it alongside the rest. It has to be:
+every fixed and heritage option spans the full 6 m horizon, so their
+execution times are comparable, while the retreat path is 1 m and costs a
+sixth as much to execute for reasons unrelated to its merit. Ranked together,
+a 1 m reverse outranks the path that finishes the drive and the rover
+oscillates over the same two metres indefinitely.
+
+### Validation
+
+ACE's claim is conservatism: the settled truth must lie inside the predicted
+range. The papers check this against ROAMS, JPL's internal simulator. Here it
+is checked against the full rocker-bogie physics in MuJoCo, on terrain built
+from the real Jezero HiRISE DTM.
+
+```bash
+python scripts/validate_ace.py --poses 40 --eps 0.015
+```
+
+Each pose: sample a random position and heading, ask ACE for its ranges from
+the terrain alone, then drop the rover there, let the suspension settle under
+Mars gravity, and measure what actually happened.
+
+| Across 78 poses, two seeds, ε = 15 mm | |
+|---|---|
+| Tilt contained | 78 / 78 |
+| Clearance contained | 78 / 78 |
+| Rocker contained | 78 / 78 |
+| Bogie contained | 78 / 78 |
+| Clearance range width (median) | 0.153 m |
+| Tilt range width (median) | 4.6° |
+| Worst case: floor below true clearance | 5.0 cm |
+
+Both halves matter. Containment alone is trivial to satisfy with a wide
+enough range, and a range reporting "clearance is somewhere between 8 cm and
+73 cm" is never wrong and never useful — it rejects every path, because 8 cm
+is below the 25 cm limit.
+
+#### Four mistakes that cost conservatism or tightness
+
+Worth recording, because each produced plausible-looking output.
+
+1. **The belly ground was not the belly's ground.** Equation 32 needs the
+   terrain under the belly pan; using the min and max across the six wheel
+   boxes instead spans nearly 3 m of ground rather than 1.9 m.
+2. **Clearance was evaluated globally rather than per point.** The pan and the
+   ground beneath it tilt together, so the pan's lowest corner sits over the
+   lowest ground. Taking the global extreme of each independently pairs the
+   lowest corner with the highest ground anywhere in the footprint, and
+   subtracts the slope twice — 26 cm across a 1.9 m belly at 8°, against a
+   25 cm limit. This alone rejected every path on benign terrain.
+3. **Left and right were hulled separately, then combined.** That reports
+   maximum pitch and maximum roll simultaneously, from wheel positions that
+   cannot occur together. All 64 extreme configurations now go through the
+   whole chain as points before anything is hulled.
+4. **The eq-28 roll lever was the rocker-pivot offset (0.80 m), not the wheel
+   offset (1.12 m).** `[z_d]` is built from wheel heights, which carry the
+   full lateral offset, so roll was over-reported by about 40% — a 4° lateral
+   slope came out as 5.5°. It is now pinned by the invariant that on a uniform
+   plane the rover's attitude is the plane's.
+
 ## Autonomous navigation (the AI-planned-drive loop)
 
 In December 2025 Perseverance drove 689 ft and 807 ft on routes planned by AI

@@ -29,13 +29,15 @@ import numpy as np
 import mujoco
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# the ace package lives at the repo root, one level up from scripts/
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ace import RoverGeometry
 from ace_eval import AceGroundTruth
 from m2020_drive import Mobility, hold_pose
 from autonav import draw_route
-import enav
-from enav import EnavMaps, GlobalPlanner, select_path, first_leg
+from ace import enav
+from ace import EnavMaps, GlobalPlanner, select_path, first_leg
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES = os.path.join(ROOT, "images")

@@ -41,14 +41,12 @@ test = ["pytest"]
 Repository = "https://github.com/AdityaRampal26/NASA-M2020-Perseverance-Rover---MuJoCo"
 
 [tool.setuptools]
-package-dir = { "" = "scripts" }
+packages = ["ace"]
 py-modules = [
-    "ace",
     "ace_eval",
     "autonav",
     "build_m2020",
     "demo",
-    "enav",
     "fetch_jezero",
     "m2020_drive",
     "make_course",
@@ -61,3 +59,7 @@ py-modules = [
     "terrain_probe",
     "validate_ace",
 ]
+
+[tool.setuptools.package-dir]
+"" = "scripts"
+"ace" = "ace"

@@ -21,6 +21,12 @@ import math
 
 import numpy as np
 
+import os
+import sys
+
+# the ace package lives at the repo root, one level up from scripts/
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from ace import ace, RoverGeometry, WHEEL_KEYS, PERCEPTION_EPS
 from ace_eval import AceGroundTruth
 

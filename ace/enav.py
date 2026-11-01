@@ -52,7 +52,7 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-from ace import (ace, ace_cost, RoverGeometry, DEFAULT_LIMITS,
+from .core import (ace, ace_cost, RoverGeometry, DEFAULT_LIMITS,
                  wheel_box_halfsize, PERCEPTION_EPS)
 
 # ---- published parameters ------------------------------------------------

@@ -7,6 +7,7 @@ import pytest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
+sys.path.insert(0, ROOT)   # the ace package
 
 MODEL_XML = os.path.join(ROOT, "models", "m2020_perseverance.xml")
 MESHES = os.path.join(ROOT, "models", "assets", "CHASSIS.obj")
