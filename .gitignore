@@ -23,3 +23,7 @@ _to_delete/
 # pip install -e . build metadata
 *.egg-info/
 build/
+
+# ACE validation dumps
+ace_terrain.npz
+ace_truth.npz

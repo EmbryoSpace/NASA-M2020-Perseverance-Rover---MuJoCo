@@ -43,14 +43,19 @@ Repository = "https://github.com/AdityaRampal26/NASA-M2020-Perseverance-Rover---
 [tool.setuptools]
 package-dir = { "" = "scripts" }
 py-modules = [
+    "ace",
+    "ace_eval",
     "autonav",
     "build_m2020",
     "demo",
+    "enav",
     "fetch_jezero",
     "m2020_drive",
     "make_course",
     "make_gifs",
     "plot_drive",
+    "run_enav",
     "teleop",
     "terrain_probe",
+    "validate_ace",
 ]

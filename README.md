@@ -119,6 +119,78 @@ Each motor can push harder than the ground can grip, so **a wheel slips before i
 
 <p align="center"><img src="images/autonav_result.png" width="900" alt="Terrain with planned and driven route, and the hazard map the planner searched"/></p>
 
+## Flight-style autonomy: ACE and ENav
+
+The route planner above is my own design. Perseverance uses something rather
+different, described in two JPL papers, and this repo now implements both.
+
+**ACE** (Approximate Clearance Evaluation) answers *"if I put six wheels on
+that patch of ground, what happens to my body?"* — without simulating it.
+Rather than settling the rover, it pushes the terrain's height uncertainty
+through the suspension geometry and returns a **guaranteed range** for tilt,
+belly clearance, wheel drop and the rocker and bogie angles. It is allowed to
+be pessimistic; it is not allowed to be wrong. The truth must land inside the
+range, because a range that is too optimistic drives the rover into a rock.
+
+**ENav** is the navigator that uses it. Each cycle it builds a tree of 1,694
+candidate paths out to a 6 m horizon, ranks them by estimated time to the
+goal, spends ACE down that ranking until something is feasible, drives the
+first metre of the winner, and replans.
+
+Both were written from the published papers alone. No JPL source was used.
+
+### Does ACE actually bound the truth?
+
+The papers validate ACE against ROAMS, JPL's internal simulator, which nobody
+outside JPL can run. This repo validates it against the full rocker-bogie
+physics in MuJoCo on real Jezero terrain — which anyone can re-run:
+
+```bash
+python scripts/validate_ace.py --poses 40 --eps 0.015
+```
+
+| | Result |
+|---|---|
+| Poses where the settled truth fell inside ACE's range | 78 / 78 |
+| Clearance range width (median) | 0.153 m |
+| Tilt range width (median) | 4.6° |
+| Worst case: ACE's floor below the true clearance | 5.0 cm |
+
+Conservative on every pose, and tight enough to be useful — a bound that is
+always true but infinitely wide rejects every path the rover could take.
+
+### What matches the papers
+
+| Quantity | Published | Here |
+|---|---|---|
+| Path options in the fixed tree | 14 × 11 × 11 = 1694 | 1694 |
+| Poses sampled along a straight 6 m path | 24 | 24 |
+| Poses on a 30° turn-in-place plus 6 m | 27 | 27 |
+| ACE clearance limit | 25 cm | 25 cm |
+| ACE tilt limit | 30° | 30° |
+| ACE wheel-drop limit | 35 cm | 35 cm |
+| Planning horizon / driven per cycle | 6 m / 1 m | 6 m / 1 m |
+| ACE evaluation interval along a path | 25 cm | 25 cm |
+| Flat-ground belly clearance | 60 cm | 60 cm |
+
+Quantities the papers describe structurally but do not publish — the ACE cost
+weights, the rocker and bogie angle limits, how many ACE runs to spend per
+cycle — are marked `EST` in the source. One behaviour is mine rather than the
+papers': a path that drives through the goal is not charged for the rest of
+its 6 m horizon, without which the rover circles the goal instead of arriving.
+
+```bash
+python scripts/run_enav.py --goal 18 6 --cycles 30
+```
+
+> Otsu et al., *Fast Approximate Clearance Evaluation for Rovers with
+> Articulated Suspension Systems*, Journal of Field Robotics 37:768–785,
+> 2020. doi:10.1002/rob.21892
+>
+> Toupet, Ono, Del Sesto, Maimone, McHenry, *Enhanced Autonomous Navigation on
+> the Perseverance Mars Rover*, IEEE Transactions on Field Robotics
+> 3:83–124, 2026.
+
 ## Does it match the real rover?
 
 | | Simulation | NASA published |
@@ -149,6 +221,8 @@ bash setup.sh && source .venv/bin/activate   # also downloads JPL's rover meshes
 mjpython scripts/teleop.py                    # drive it with the keyboard (Linux: python)
 python scripts/demo.py validate               # check the model against NASA's numbers
 python scripts/autonav.py --model course_jezero_boulder.xml --goal 18 6 --span 40   # the boulder drive
+python scripts/run_enav.py --goal 18 6 --cycles 30              # ENav: flight-style planner
+python scripts/validate_ace.py --poses 40 --eps 0.015           # ACE vs settled physics
 python scripts/make_gifs.py                   # redraw the animations on this page
 python -m pip install -r requirements-dev.txt && python -m pytest tests   # steering, planner and camera tests
 ```

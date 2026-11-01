@@ -18,6 +18,18 @@ Run these from the repo root after `bash setup.sh && source .venv/bin/activate`.
 | `m2020_drive.py` | Rocker-bogie steering: arcs, turn in place, and crab (sideways) driving |
 | `gym_env.py` | A [Gymnasium](https://gymnasium.farama.org) environment (`Perseverance-Nav-v0`) for training driving policies with reinforcement learning: drive to a random goal without tipping. Needs `pip install "gymnasium>=1.0"`; run it directly for a self-check |
 
+**Flight-style autonomy (ACE and ENav)**
+
+These implement what Perseverance actually runs, from the published JPL papers.
+
+| Script | What it does |
+|---|---|
+| `ace.py` | ACE (Approximate Clearance Evaluation): turns terrain height uncertainty into guaranteed ranges for tilt, belly clearance, wheel drop and the suspension angles, without simulating anything. Pure geometry, no MuJoCo needed |
+| `enav.py` | ENav's planner: the 1,694-path tree out to a 6 m horizon, the time-to-goal cost, and the two-stage selection that spends ACE down the ranking |
+| `run_enav.py` | Drives to a goal with ENav on the Jezero terrain, replanning every metre |
+| `ace_eval.py` | The physics oracle ACE gets checked against: drops the full rover onto the terrain, lets the suspension settle, and measures what really happened |
+| `validate_ace.py` | The conservatism study: samples poses, compares ACE's ranges against the settled truth, and reports both containment and how tight the bounds are |
+
 **Terrain**
 
 | Script | What it does |
